@@ -6,5 +6,4 @@ one file for one job.
 https://lunatigs.github.io/textsplit/
 
 ## License
--------
 https://creativecommons.org/publicdomain/zero/1.0/

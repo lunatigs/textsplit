@@ -85,7 +85,7 @@ license https://creativecommons.org/publicdomain/zero/1.0/
                 <form onsubmit="return noSubmit(e)">
                     <label>Split limit:</label>
                     <input id="splitLimit" name="splitLimit" type="text" value="500" />
-                    <div id="splitLimitWarning" class="splitLimitWarning hide">This has to be a number bigger than 0. Split limit has automatically been set to 500.</div>
+                    <div id="splitLimitWarning" class="splitLimitWarning hide"></div>
                     <label>Your text:</label>
                     <textarea id="inputText" placeholder="insert your text here..."></textarea>
                 </form>
@@ -108,7 +108,7 @@ license https://creativecommons.org/publicdomain/zero/1.0/
                 let textLength = inputTextValue.length;
                 let splitLimit = parseInt(inputSplitLimit.value);
                 if(null === splitLimit || true === isNaN(splitLimit) || 0 === splitLimit || 0 > splitLimit) {
-                    setSplitLimitWarning(true);
+                    setSplitLimitWarning(true, 0, 0, 500);
                     splitLimit = 500;
                 } else {
                     if(true === getSplitLimitWarning()) {
@@ -119,6 +119,12 @@ license https://creativecommons.org/publicdomain/zero/1.0/
                 let partsCollection = document.getElementById('partsCollection');
                 partsCollection.textContent = '';
                 if(0 < parts) {
+                    let partsCounterTotal = 2*parts.toString().length+2;
+                    if(splitLimit <= partsCounterTotal) {
+                        setSplitLimitWarning(true, 1, partsCounterTotal, partsCounterTotal + 1);
+                        splitLimit = partsCounterTotal + 1;
+                        parts = Math.ceil(textLength / splitLimit);
+                    }
                     let trueSplitLimit;
                     let partsArray;
                     if(2 > parts) {
@@ -126,11 +132,13 @@ license https://creativecommons.org/publicdomain/zero/1.0/
                         partsArray = new Array(1);
                         partsArray[0] = inputTextValue;
                     } else {
-                        let partsCounterLength = (2*(parts.toString().length))+2;
-                        trueSplitLimit = splitLimit - partsCounterLength;
-                        partsArray = new Array(parts);
-                        for (let pi=0, splitLocation=0; pi < parts; pi++, splitLocation += trueSplitLimit) {
+                        partsArray = new Array(parts);                        
+                        let splitLocation = 0;
+                        for (let pi=0; pi < parts; pi++) {
+                            let partsCounterLength = (pi+1).toString().length + parts.toString().length + 2;
+                            trueSplitLimit = splitLimit - partsCounterLength;
                             partsArray[pi] = inputTextValue.substr(splitLocation, trueSplitLimit) + ' ' + (pi+1) + '/' + parts;
+                            splitLocation += trueSplitLimit;
                         }
                     }
                     for(let p=0; p < partsArray.length; p++) {
@@ -150,16 +158,25 @@ license https://creativecommons.org/publicdomain/zero/1.0/
             function getSplitLimitWarning() {
                 return splitLimitWarning;
             }
-            function setSplitLimitWarning(v) {
+            function setSplitLimitWarning(v, t, m, s) {
                 let splitLimitWarningElement = document.getElementById('splitLimitWarning');
                 if(true === v) {
-                    splitLimitWarning = v;
+                    splitLimitWarning = true;
+                    switch(t) {
+                        case 0:
+                            splitLimitWarningElement.textContent = 'This has to be a number bigger than ' + m.toString() + '. Split limit has automatically been set to ' + s.toString() + '.';
+                        break;
+                        case 1:
+                            splitLimitWarningElement.textContent = 'This can\'t be smaller than the parts counter with a length of ' + m.toString() + '. Split limit has automatically been set to ' + s.toString() + '.';
+                        break;
+                    }
                     if(true === splitLimitWarningElement.classList.contains('hide')) {
                         splitLimitWarningElement.classList.remove('hide');
                     }
                     splitLimitWarningElement.classList.add('show');
                 } else {
                     splitLimitWarning = false;
+                    splitLimitWarningElement.textContent = '';
                     if(true === splitLimitWarningElement.classList.contains('show')) {
                         splitLimitWarningElement.classList.remove('show');
                     }
